@@ -25,13 +25,41 @@ type snapshotEnvelope struct {
 func (s *FileStore) persist(event domain.AuditEvent, item *domain.ReviewCase) error {
 	s.appendMu.Lock()
 	defer s.appendMu.Unlock()
+	offset, err := s.eventLogOffset()
+	if err != nil {
+		return fmt.Errorf("读取审计事件日志: %w", err)
+	}
 	if err := appendJSONLine(s.eventsPath, event); err != nil {
 		return fmt.Errorf("追加审计事件: %w", err)
 	}
 	if err := s.writeSnapshot(item); err != nil {
+		_ = s.rollbackEventLog(offset)
 		return fmt.Errorf("更新案件快照: %w", err)
 	}
 	return nil
+}
+
+func (s *FileStore) eventLogOffset() (int64, error) {
+	info, err := os.Stat(s.eventsPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return info.Size(), nil
+}
+
+func (s *FileStore) rollbackEventLog(offset int64) error {
+	file, err := os.OpenFile(s.eventsPath, os.O_WRONLY, 0o640)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := file.Truncate(offset); err != nil {
+		return err
+	}
+	return file.Sync()
 }
 
 func appendJSONLine(path string, value any) error {
