@@ -116,7 +116,9 @@ func (s *FileStore) Events(_ context.Context, caseID string) ([]domain.AuditEven
 	}
 	items := s.events[caseID]
 	result := make([]domain.AuditEvent, len(items))
-	copy(result, items)
+	for i, event := range items {
+		result[i] = cloneEvent(event)
+	}
 	return result, nil
 }
 

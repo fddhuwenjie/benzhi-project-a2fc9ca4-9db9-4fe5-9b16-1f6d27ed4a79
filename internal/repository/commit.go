@@ -52,7 +52,23 @@ func (s *FileStore) Create(_ context.Context, item *domain.ReviewCase, meta Comm
 		return CommitResult{}, err
 	}
 	s.install(event, copyItem)
-	return CommitResult{Case: copyItem, Event: event}, nil
+	return s.commitResult(copyItem, event)
+}
+
+func (s *FileStore) commitResult(storedCase *domain.ReviewCase, storedEvent domain.AuditEvent) (CommitResult, error) {
+	outCase, err := cloneCase(storedCase)
+	if err != nil {
+		return CommitResult{}, err
+	}
+	return CommitResult{Case: outCase, Event: cloneEvent(storedEvent)}, nil
+}
+
+func cloneEvent(event domain.AuditEvent) domain.AuditEvent {
+	clone := event
+	if event.Payload != nil {
+		clone.Payload = append([]byte(nil), event.Payload...)
+	}
+	return clone
 }
 
 func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mutate func(*domain.ReviewCase) error) (CommitResult, error) {
@@ -93,7 +109,7 @@ func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mu
 		return CommitResult{}, err
 	}
 	s.install(event, copyItem)
-	return CommitResult{Case: copyItem, Event: event}, nil
+	return s.commitResult(copyItem, event)
 }
 
 func (s *FileStore) newEvent(item *domain.ReviewCase, from domain.CaseState, meta CommitMeta) (domain.AuditEvent, error) {
@@ -130,7 +146,7 @@ func (s *FileStore) replay(event domain.AuditEvent) (CommitResult, error) {
 	if err != nil {
 		return CommitResult{}, err
 	}
-	return CommitResult{Case: item, Event: event, Replayed: true}, nil
+	return CommitResult{Case: item, Event: cloneEvent(event), Replayed: true}, nil
 }
 
 func (s *FileStore) install(event domain.AuditEvent, item *domain.ReviewCase) {
