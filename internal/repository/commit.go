@@ -52,7 +52,7 @@ func (s *FileStore) Create(_ context.Context, item *domain.ReviewCase, meta Comm
 		return CommitResult{}, err
 	}
 	s.install(event, copyItem)
-	return CommitResult{Case: copyItem, Event: event}, nil
+	return CommitResult{Case: copyItem, Event: cloneEvent(event)}, nil
 }
 
 func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mutate func(*domain.ReviewCase) error) (CommitResult, error) {
@@ -93,7 +93,7 @@ func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mu
 		return CommitResult{}, err
 	}
 	s.install(event, copyItem)
-	return CommitResult{Case: copyItem, Event: event}, nil
+	return CommitResult{Case: copyItem, Event: cloneEvent(event)}, nil
 }
 
 func (s *FileStore) newEvent(item *domain.ReviewCase, from domain.CaseState, meta CommitMeta) (domain.AuditEvent, error) {
@@ -130,7 +130,7 @@ func (s *FileStore) replay(event domain.AuditEvent) (CommitResult, error) {
 	if err != nil {
 		return CommitResult{}, err
 	}
-	return CommitResult{Case: item, Event: event, Replayed: true}, nil
+	return CommitResult{Case: item, Event: cloneEvent(event), Replayed: true}, nil
 }
 
 func (s *FileStore) install(event domain.AuditEvent, item *domain.ReviewCase) {

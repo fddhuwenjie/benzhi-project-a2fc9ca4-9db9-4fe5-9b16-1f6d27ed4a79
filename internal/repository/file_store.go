@@ -116,7 +116,9 @@ func (s *FileStore) Events(_ context.Context, caseID string) ([]domain.AuditEven
 	}
 	items := s.events[caseID]
 	result := make([]domain.AuditEvent, len(items))
-	copy(result, items)
+	for i := range items {
+		result[i] = cloneEvent(items[i])
+	}
 	return result, nil
 }
 
@@ -141,4 +143,18 @@ func cloneCase(item *domain.ReviewCase) (*domain.ReviewCase, error) {
 		return nil, err
 	}
 	return &result, nil
+}
+
+func cloneEvent(event domain.AuditEvent) domain.AuditEvent {
+	event.Payload = cloneRawMessage(event.Payload)
+	return event
+}
+
+func cloneRawMessage(data json.RawMessage) json.RawMessage {
+	if len(data) == 0 {
+		return nil
+	}
+	copied := make(json.RawMessage, len(data))
+	copy(copied, data)
+	return copied
 }
