@@ -35,7 +35,7 @@ func (s *FileStore) ReadArchive(_ context.Context, caseID string) (domain.Archiv
 	cached, ok := s.archiveCache[caseID]
 	s.mu.RUnlock()
 	if ok {
-		return cached, nil
+		return cloneArchiveDocument(cached)
 	}
 	content, err := os.ReadFile(filepath.Join(s.archiveDir, caseID+".json"))
 	if os.IsNotExist(err) {
@@ -56,13 +56,28 @@ func (s *FileStore) ReadArchive(_ context.Context, caseID string) (domain.Archiv
 		return domain.ArchiveDocument{}, fmt.Errorf("归档摘要不匹配")
 	}
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	if cached, ok := s.archiveCache[caseID]; ok {
-		document = cached
-	} else {
-		s.archiveCache[caseID] = document
+		return cloneArchiveDocument(cached)
 	}
-	s.mu.Unlock()
+	stored, err := cloneArchiveDocument(document)
+	if err != nil {
+		return domain.ArchiveDocument{}, err
+	}
+	s.archiveCache[caseID] = stored
 	return document, nil
+}
+
+func cloneArchiveDocument(document domain.ArchiveDocument) (domain.ArchiveDocument, error) {
+	content, err := json.Marshal(document)
+	if err != nil {
+		return domain.ArchiveDocument{}, err
+	}
+	var result domain.ArchiveDocument
+	if err := json.Unmarshal(content, &result); err != nil {
+		return domain.ArchiveDocument{}, err
+	}
+	return result, nil
 }
 
 func (s *FileStore) VerifyArchive(ctx context.Context, caseID, digest string) (bool, error) {
