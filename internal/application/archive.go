@@ -39,17 +39,24 @@ func (s *Service) Decide(ctx context.Context, caseID string, input DecisionInput
 	if input.Decision != "approved" {
 		return nil, false, domain.ValidationError(domain.FieldError{Field: "decision", Message: "终审决定必须为 approved 或 returned"})
 	}
-	approved, err := s.store.Update(ctx, caseID, commitMeta("case_approved", input.WriteContext, map[string]any{"note": input.Note}), func(item *domain.ReviewCase) error {
-		return item.Archive(input.Note, s.now())
-	})
+	current, err := s.store.Get(ctx, caseID)
 	if err != nil {
 		return nil, false, err
+	}
+	if current.State == domain.StateArchived && current.ArchiveDigest != "" {
+		return current, true, nil
+	}
+	stamp := s.now()
+	if current.State != domain.StateArchived {
+		if err := current.Archive(input.Note, stamp); err != nil {
+			return nil, false, err
+		}
 	}
 	events, err := s.store.Events(ctx, caseID)
 	if err != nil {
 		return nil, false, err
 	}
-	document := buildArchive(approved.Case, events)
+	document := buildArchive(current, events)
 	digest, err := domain.ArchiveDigest(document)
 	if err != nil {
 		return nil, false, err
@@ -57,17 +64,22 @@ func (s *Service) Decide(ctx context.Context, caseID string, input DecisionInput
 	if err := s.store.SaveArchive(ctx, document); err != nil {
 		return nil, false, err
 	}
-	digestInput := input.WriteContext
-	digestInput.RequestID += ":archive-digest"
-	digestInput.ExpectedRevision = approved.Case.Revision
-	attached, err := s.store.Update(ctx, caseID, commitMeta("archive_digest_recorded", digestInput, map[string]any{"digest": digest}), func(item *domain.ReviewCase) error {
-		item.ArchiveDigest = digest
+	result, err := s.store.Update(ctx, caseID, commitMeta("case_approved", input.WriteContext, map[string]any{"note": input.Note}), func(item *domain.ReviewCase) error {
+		if item.State != domain.StateArchived {
+			if err := item.Archive(input.Note, stamp); err != nil {
+				return err
+			}
+		}
+		if item.ArchiveDigest == "" {
+			item.ArchiveDigest = digest
+		}
 		return nil
 	})
 	if err != nil {
+		_ = s.store.RemoveArchive(ctx, caseID)
 		return nil, false, err
 	}
-	return attached.Case, approved.Replayed && attached.Replayed, nil
+	return result.Case, result.Replayed, nil
 }
 
 func buildArchive(item *domain.ReviewCase, timeline []domain.AuditEvent) domain.ArchiveDocument {

@@ -53,3 +53,11 @@ func (s *FileStore) VerifyArchive(ctx context.Context, caseID, digest string) (b
 	}
 	return strings.EqualFold(document.Digest, strings.TrimSpace(digest)), nil
 }
+
+func (s *FileStore) RemoveArchive(_ context.Context, caseID string) error {
+	err := os.Remove(filepath.Join(s.archiveDir, caseID+".json"))
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}

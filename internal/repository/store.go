@@ -53,4 +53,5 @@ type Store interface {
 	SaveArchive(context.Context, domain.ArchiveDocument) error
 	ReadArchive(context.Context, string) (domain.ArchiveDocument, error)
 	VerifyArchive(context.Context, string, string) (bool, error)
+	RemoveArchive(context.Context, string) error
 }
