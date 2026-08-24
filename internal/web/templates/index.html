@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图像完整性审查工作台</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body data-page="queue">
+  <header class="topbar">
+    <a class="brand" href="/">图像完整性审查</a>
+    <nav><a class="primary-link" href="/cases/new">新建审查案</a></nav>
+  </header>
+  <main class="workspace">
+    <section class="page-heading">
+      <div><p class="eyebrow">案件队列</p><h1>审查进度</h1></div>
+      <div class="summary" id="queue-summary" aria-live="polite"></div>
+    </section>
+    <section class="table-section">
+      <form class="filters queue-filters" id="queue-filters">
+        <label>状态<select name="status"><option value="">全部状态</option><option value="draft">草稿</option><option value="pending_review">待领取</option><option value="in_review">判读中</option><option value="awaiting_author">待作者回应</option><option value="awaiting_recheck">待复核</option><option value="ready_decision">待终审</option><option value="archived">已归档</option></select></label>
+        <label>栏目<input name="journal_section"></label><label>领取人<input name="assignee_id"></label><label>编号或标题<input name="q"></label>
+        <label>风险级别<select name="severity"><option value="">全部级别</option><option value="critical">严重</option><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></label>
+        <label class="check-label"><input type="checkbox" name="open_only" value="true">仅未闭环风险</label>
+        <label>每页<select name="page_size"><option>10</option><option selected>20</option><option>50</option><option>100</option></select></label>
+        <button class="primary" type="submit">筛选</button><button class="secondary" type="button" id="clear-filters">清除</button>
+      </form>
+      <div class="table-wrap">
+        <table><thead><tr><th>稿件编号</th><th>题名</th><th>栏目</th><th>状态</th><th>风险项</th><th>revision</th><th>更新</th></tr></thead><tbody id="case-list"><tr><td colspan="7" class="empty">正在读取案件...</td></tr></tbody></table>
+      </div>
+      <div class="pagination" id="queue-pagination"></div>
+    </section>
+    <div id="notice" class="notice" hidden></div>
+  </main>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

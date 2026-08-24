@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新建审查案 · 图像完整性审查</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body data-page="new">
+  <header class="topbar"><a class="brand" href="/">图像完整性审查</a><nav><a href="/">返回案件队列</a></nav></header>
+  <main class="workspace narrow">
+    <section class="page-heading"><div><p class="eyebrow">建档</p><h1>新建稿件审查案</h1></div></section>
+    <form id="new-case-form" class="editor-form">
+      <fieldset><legend>稿件信息</legend><div class="form-grid three"><label>稿件编号<input name="manuscript_code" required autocomplete="off"></label><label>期刊栏目<input name="journal_section" required></label><label class="span-3">论文题名<input name="title" required></label></div></fieldset>
+      <fieldset><div class="fieldset-heading"><legend>图像登记</legend><button class="secondary" type="button" id="add-figure">添加图像</button></div><div id="figure-rows"></div></fieldset>
+      <div class="form-actions"><a href="/">取消</a><button class="primary" type="submit">保存草稿</button></div>
+    </form>
+    <template id="figure-template"><section class="figure-editor"><div class="row-heading"><strong>图像 <span class="figure-number"></span></strong><button type="button" class="text-button remove-figure">移除</button></div><div class="form-grid four"><label>图像编号<input data-field="figure_label"></label><label>面板编号<input data-field="panel_label"></label><label>像素宽度<input data-field="pixel_width" type="number" min="1" required></label><label>像素高度<input data-field="pixel_height" type="number" min="1" required></label><label class="span-4">文件摘要<input data-field="content_digest" pattern="[a-fA-F0-9]{16,128}" required></label><label class="span-4">图注<input data-field="caption" required></label><label class="span-2">实验来源<input data-field="experiment_source"></label><label class="span-2">原始数据引用<input data-field="raw_data_reference"></label></div></section></template>
+    <div id="notice" class="notice" hidden></div>
+  </main>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
+

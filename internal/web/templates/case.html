@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>案件审查 · 图像完整性审查</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body data-page="case">
+  <header class="topbar"><a class="brand" href="/">图像完整性审查</a><nav><a href="/">案件队列</a><a href="/cases/new">新建审查案</a></nav></header>
+  <main class="workspace">
+    <section id="case-heading" class="page-heading"><div><p class="eyebrow">案件详情</p><h1>正在载入...</h1></div></section>
+    <section id="case-actions" class="action-band" aria-live="polite"></section>
+    <section class="detail-section"><div class="section-title"><h2>图像清单</h2><div class="section-tools"><span id="figure-count"></span><button type="button" class="secondary" id="edit-figures" hidden>编辑清单</button></div></div><div class="table-wrap" id="figure-table"><table><thead><tr><th>编号</th><th>摘要</th><th>尺寸</th><th>实验来源</th><th>原始数据</th></tr></thead><tbody id="figure-list"></tbody></table></div><form id="draft-figure-form" class="draft-editor" hidden><div id="draft-figure-rows"></div><div class="form-actions"><button type="button" class="secondary" id="add-draft-figure">添加图像</button><button type="button" class="secondary" id="cancel-draft-figures">取消</button><button type="submit" class="primary">保存并预检</button></div></form><div id="preflight" class="preflight"></div></section>
+    <template id="draft-figure-template"><section class="figure-editor"><input type="hidden" data-field="id"><div class="row-heading"><strong>图像 <span class="figure-number"></span></strong><button type="button" class="text-button remove-figure">移除</button></div><div class="form-grid four"><label>图像编号<input data-field="figure_label"></label><label>面板编号<input data-field="panel_label"></label><label>像素宽度<input data-field="pixel_width" type="number" min="1" required></label><label>像素高度<input data-field="pixel_height" type="number" min="1" required></label><label class="span-4">文件摘要<input data-field="content_digest" pattern="[a-fA-F0-9]{16,128}" required></label><label class="span-4">图注<input data-field="caption" required></label><label class="span-2">实验来源<input data-field="experiment_source"></label><label class="span-2">原始数据引用<input data-field="raw_data_reference"></label></div></section></template>
+    <section class="detail-section"><div class="section-title"><h2>风险项与处置</h2><span id="finding-count"></span></div><div id="batch-verdicts" class="batch-toolbar" hidden><label>统一结论<select id="batch-verdict"><option value="needs_explanation">需说明</option><option value="established">成立</option><option value="excluded">排除</option></select></label><button type="button" class="secondary" id="apply-batch-verdict">应用到已选项</button><button type="button" class="primary" id="save-batch-verdicts">批量保存</button></div><div id="finding-list" class="finding-list"></div></section>
+    <section class="detail-section" id="round-section" hidden><div class="section-title"><h2>回应轮次历史</h2><span id="round-count"></span></div><div id="round-history" class="round-history"></div></section>
+    <section class="detail-section"><div class="section-title"><h2>状态轨迹</h2><button type="button" class="secondary" id="load-timeline">刷新轨迹</button></div><ol id="timeline" class="timeline"></ol></section>
+    <div id="credential" class="credential" hidden></div><div id="notice" class="notice" hidden></div>
+  </main>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
