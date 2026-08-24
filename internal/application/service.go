@@ -11,8 +11,9 @@ import (
 )
 
 type Service struct {
-	store repository.Store
-	now   func() time.Time
+	store                 repository.Store
+	now                   func() time.Time
+	returnDecisionPayload map[string]any
 }
 
 func NewService(store repository.Store) *Service {
@@ -23,6 +24,17 @@ func (s *Service) SetClock(clock func() time.Time) {
 	if clock != nil {
 		s.now = clock
 	}
+}
+
+func (s *Service) prepareReturnDecisionPayload(note string) map[string]any {
+	if s.returnDecisionPayload == nil {
+		s.returnDecisionPayload = make(map[string]any, 4)
+	}
+	for key := range s.returnDecisionPayload {
+		delete(s.returnDecisionPayload, key)
+	}
+	s.returnDecisionPayload["note"] = note
+	return s.returnDecisionPayload
 }
 
 func randomToken(bytes int) (string, error) {

@@ -15,7 +15,7 @@ func (s *Service) Decide(ctx context.Context, caseID string, input DecisionInput
 		return nil, false, err
 	}
 	if input.Decision == "returned" {
-		payload := map[string]any{"note": input.Note}
+		payload := s.prepareReturnDecisionPayload(input.Note)
 		result, err := s.store.Update(ctx, caseID, commitMeta("case_returned", input.WriteContext, payload), func(item *domain.ReviewCase) error {
 			closedRound := item.CurrentRound
 			err := item.ReturnForSupplement(input.Note, s.now())
