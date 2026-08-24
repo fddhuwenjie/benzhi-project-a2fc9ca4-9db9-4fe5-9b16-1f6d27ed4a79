@@ -55,7 +55,10 @@ func (s *FileStore) Create(_ context.Context, item *domain.ReviewCase, meta Comm
 	return CommitResult{Case: copyItem, Event: event}, nil
 }
 
-func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mutate func(*domain.ReviewCase) error) (CommitResult, error) {
+func (s *FileStore) Update(ctx context.Context, caseID string, meta CommitMeta, mutate func(*domain.ReviewCase) error) (CommitResult, error) {
+	if err := ctx.Err(); err != nil {
+		return CommitResult{}, err
+	}
 	lock := s.lockFor(caseID)
 	lock.Lock()
 	defer lock.Unlock()
