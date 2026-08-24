@@ -21,10 +21,22 @@ func (s *FileStore) SaveArchive(_ context.Context, document domain.ArchiveDocume
 	if err != nil {
 		return err
 	}
-	return atomicWrite(filepath.Join(s.archiveDir, document.CaseID+".json"), content, 0o440)
+	if err := atomicWrite(filepath.Join(s.archiveDir, document.CaseID+".json"), content, 0o440); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	delete(s.archiveCache, document.CaseID)
+	s.mu.Unlock()
+	return nil
 }
 
 func (s *FileStore) ReadArchive(_ context.Context, caseID string) (domain.ArchiveDocument, error) {
+	s.mu.RLock()
+	cached, ok := s.archiveCache[caseID]
+	s.mu.RUnlock()
+	if ok {
+		return cached, nil
+	}
 	content, err := os.ReadFile(filepath.Join(s.archiveDir, caseID+".json"))
 	if os.IsNotExist(err) {
 		return domain.ArchiveDocument{}, ErrNotFound
@@ -43,6 +55,13 @@ func (s *FileStore) ReadArchive(_ context.Context, caseID string) (domain.Archiv
 	if !strings.EqualFold(actual, document.Digest) {
 		return domain.ArchiveDocument{}, fmt.Errorf("归档摘要不匹配")
 	}
+	s.mu.Lock()
+	if cached, ok := s.archiveCache[caseID]; ok {
+		document = cached
+	} else {
+		s.archiveCache[caseID] = document
+	}
+	s.mu.Unlock()
 	return document, nil
 }
 

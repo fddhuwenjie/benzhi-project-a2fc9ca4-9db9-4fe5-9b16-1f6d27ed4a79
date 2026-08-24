@@ -25,6 +25,7 @@ type FileStore struct {
 	caseLocks     map[string]*sync.Mutex
 	events        map[string][]domain.AuditEvent
 	requestEvents map[string]map[string]domain.AuditEvent
+	archiveCache  map[string]domain.ArchiveDocument
 }
 
 func OpenFileStore(root string) (*FileStore, error) {
@@ -41,6 +42,7 @@ func OpenFileStore(root string) (*FileStore, error) {
 		caseLocks:     map[string]*sync.Mutex{},
 		events:        map[string][]domain.AuditEvent{},
 		requestEvents: map[string]map[string]domain.AuditEvent{},
+		archiveCache:  map[string]domain.ArchiveDocument{},
 	}
 	for _, dir := range []string{root, store.snapshotDir, store.archiveDir} {
 		if err := os.MkdirAll(dir, 0o750); err != nil {
