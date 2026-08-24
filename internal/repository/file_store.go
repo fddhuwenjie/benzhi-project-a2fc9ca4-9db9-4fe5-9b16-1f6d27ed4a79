@@ -22,7 +22,7 @@ type FileStore struct {
 	appendMu      sync.Mutex
 	cases         map[string]*domain.ReviewCase
 	manuscripts   map[string]string
-	caseLocks     map[string]*sync.Mutex
+	caseLocks     map[string]*caseLock
 	events        map[string][]domain.AuditEvent
 	requestEvents map[string]map[string]domain.AuditEvent
 }
@@ -38,7 +38,7 @@ func OpenFileStore(root string) (*FileStore, error) {
 		eventsPath:    filepath.Join(root, "events.jsonl"),
 		cases:         map[string]*domain.ReviewCase{},
 		manuscripts:   map[string]string{},
-		caseLocks:     map[string]*sync.Mutex{},
+		caseLocks:     map[string]*caseLock{},
 		events:        map[string][]domain.AuditEvent{},
 		requestEvents: map[string]map[string]domain.AuditEvent{},
 	}
@@ -120,15 +120,37 @@ func (s *FileStore) Events(_ context.Context, caseID string) ([]domain.AuditEven
 	return result, nil
 }
 
-func (s *FileStore) lockFor(caseID string) *sync.Mutex {
+func (s *FileStore) lockFor(caseID string) *caseLock {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	lock, ok := s.caseLocks[caseID]
 	if !ok {
-		lock = &sync.Mutex{}
+		lock = newCaseLock()
 		s.caseLocks[caseID] = lock
 	}
 	return lock
+}
+
+type caseLock struct {
+	token chan struct{}
+}
+
+func newCaseLock() *caseLock {
+	lock := &caseLock{token: make(chan struct{}, 1)}
+	lock.token <- struct{}{}
+	return lock
+}
+
+func (l *caseLock) Lock(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	<-l.token
+	return nil
+}
+
+func (l *caseLock) Unlock() {
+	l.token <- struct{}{}
 }
 
 func cloneCase(item *domain.ReviewCase) (*domain.ReviewCase, error) {

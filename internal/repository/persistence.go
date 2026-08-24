@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"image-integrity-review/internal/domain"
 )
@@ -147,7 +146,7 @@ func (s *FileStore) loadSnapshots() error {
 		}
 		s.cases[item.ID] = item
 		s.manuscripts[strings.ToLower(item.ManuscriptCode)] = item.ID
-		s.caseLocks[item.ID] = &sync.Mutex{}
+		s.caseLocks[item.ID] = newCaseLock()
 	}
 	return nil
 }
@@ -204,7 +203,7 @@ func (s *FileStore) acceptLoadedEvent(event domain.AuditEvent) {
 			s.cases[item.ID] = item
 			s.manuscripts[strings.ToLower(item.ManuscriptCode)] = item.ID
 			if _, ok := s.caseLocks[item.ID]; !ok {
-				s.caseLocks[item.ID] = &sync.Mutex{}
+				s.caseLocks[item.ID] = newCaseLock()
 			}
 		}
 	}

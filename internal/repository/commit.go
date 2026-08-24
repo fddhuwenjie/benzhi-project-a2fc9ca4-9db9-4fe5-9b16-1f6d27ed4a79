@@ -16,12 +16,14 @@ type eventPayload struct {
 	Aggregate *domain.ReviewCase `json:"aggregate"`
 }
 
-func (s *FileStore) Create(_ context.Context, item *domain.ReviewCase, meta CommitMeta) (CommitResult, error) {
+func (s *FileStore) Create(ctx context.Context, item *domain.ReviewCase, meta CommitMeta) (CommitResult, error) {
 	if item == nil {
 		return CommitResult{}, errors.New("案件不能为空")
 	}
 	lock := s.lockFor(item.ID)
-	lock.Lock()
+	if err := lock.Lock(ctx); err != nil {
+		return CommitResult{}, err
+	}
 	defer lock.Unlock()
 	s.mu.RLock()
 	if existing, ok := s.requestEvents[item.ID][meta.RequestID]; ok {
@@ -55,9 +57,11 @@ func (s *FileStore) Create(_ context.Context, item *domain.ReviewCase, meta Comm
 	return CommitResult{Case: copyItem, Event: event}, nil
 }
 
-func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mutate func(*domain.ReviewCase) error) (CommitResult, error) {
+func (s *FileStore) Update(ctx context.Context, caseID string, meta CommitMeta, mutate func(*domain.ReviewCase) error) (CommitResult, error) {
 	lock := s.lockFor(caseID)
-	lock.Lock()
+	if err := lock.Lock(ctx); err != nil {
+		return CommitResult{}, err
+	}
 	defer lock.Unlock()
 	s.mu.RLock()
 	if existing, ok := s.requestEvents[caseID][meta.RequestID]; ok {
