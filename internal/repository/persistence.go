@@ -189,10 +189,7 @@ func (s *FileStore) loadEvents() error {
 
 func (s *FileStore) acceptLoadedEvent(event domain.AuditEvent) {
 	s.events[event.CaseID] = append(s.events[event.CaseID], event)
-	if s.requestEvents[event.CaseID] == nil {
-		s.requestEvents[event.CaseID] = map[string]domain.AuditEvent{}
-	}
-	s.requestEvents[event.CaseID][event.RequestID] = event
+	s.requestEvents[event.RequestID] = event
 	var payload eventPayload
 	if json.Unmarshal(event.Payload, &payload) != nil || payload.Aggregate == nil {
 		return

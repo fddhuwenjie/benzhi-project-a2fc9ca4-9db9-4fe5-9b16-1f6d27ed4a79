@@ -24,7 +24,7 @@ func (s *FileStore) Create(_ context.Context, item *domain.ReviewCase, meta Comm
 	lock.Lock()
 	defer lock.Unlock()
 	s.mu.RLock()
-	if existing, ok := s.requestEvents[item.ID][meta.RequestID]; ok {
+	if existing, ok := s.requestEvents[meta.RequestID]; ok {
 		s.mu.RUnlock()
 		return s.replay(existing)
 	}
@@ -60,7 +60,7 @@ func (s *FileStore) Update(_ context.Context, caseID string, meta CommitMeta, mu
 	lock.Lock()
 	defer lock.Unlock()
 	s.mu.RLock()
-	if existing, ok := s.requestEvents[caseID][meta.RequestID]; ok {
+	if existing, ok := s.requestEvents[meta.RequestID]; ok {
 		s.mu.RUnlock()
 		return s.replay(existing)
 	}
@@ -139,8 +139,5 @@ func (s *FileStore) install(event domain.AuditEvent, item *domain.ReviewCase) {
 	s.cases[item.ID] = item
 	s.manuscripts[strings.ToLower(item.ManuscriptCode)] = item.ID
 	s.events[item.ID] = append(s.events[item.ID], event)
-	if s.requestEvents[item.ID] == nil {
-		s.requestEvents[item.ID] = map[string]domain.AuditEvent{}
-	}
-	s.requestEvents[item.ID][event.RequestID] = event
+	s.requestEvents[event.RequestID] = event
 }
